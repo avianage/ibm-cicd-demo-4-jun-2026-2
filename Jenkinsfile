@@ -4,23 +4,26 @@
 // One-time setup before running:
 //   1. Jenkins > Manage Jenkins > Credentials > add "Username with password"
 //      with ID "dockerhub-creds" (your DockerHub username + access token)
-//   2. Update IMAGE_NAME below to <your-dockerhub-username>/ibm-cicd-demo
+//   2. Update IMAGE_NAME below to <your-dockerhub-username>/simple-node-demo
 //   3. Run `kubectl apply -f k8s/` once manually so the Deployment/Service exist
 //      before this pipeline tries to `kubectl set image` on it
 //   4. Jenkins agent (native install) needs docker, kubectl, and node on PATH,
 //      and its kubectl context must already point at docker-desktop
 
+// build and push to docker hub 
+
+	// docker build -t ibm-cicd-demo:1.0.0 .
+	// docker tag ibm-cicd-demo:1.0.0 rushikesh2701/ibm-cicd-demo:1.0.0
+	// docker push rushikesh2701/ibm-cicd-demo:1.0.0
+
+
 pipeline {
     agent any
 
-    parameters {
-        booleanParam(name: 'PUSH_TO_DOCKERHUB', defaultValue: true, description: 'Push image to Docker Hub')
-    }
-
     environment {
         DOCKERHUB_CREDENTIALS = credentials('docker-cicd')
-        IMAGE_NAME            = "ganesh0230/simple-node-demo"
-        IMAGE_TAG              = "latest"
+        IMAGE_NAME            = "ganesh0230/ibm-cicd-demo"
+        IMAGE_TAG              = "${env.BUILD_NUMBER}"
     }
 
     stages {
@@ -58,32 +61,18 @@ pipeline {
 
         stage('Deploy to Kubernetes') {
             steps {
-                script {
-                    // Mirrors PUSH_TO_DOCKERHUB: if we didn't push, the image only
-                    // exists locally, so tell Kubernetes to never attempt a registry
-                    // pull -- just use whatever's already on the node.
-                    def pullPolicy = params.PUSH_TO_DOCKERHUB ? 'IfNotPresent' : 'Never'
-                    writeFile file: 'pull-policy-patch.yaml', text: """spec:
-  template:
-    spec:
-      containers:
-      - name: simple-node-demo
-        imagePullPolicy: ${pullPolicy}
-"""
-                }
-                bat "kubectl patch deployment simple-node-demo --patch-file=pull-policy-patch.yaml"
-                bat "kubectl set image deployment/simple-node-demo simple-node-demo=${IMAGE_NAME}:${IMAGE_TAG}"
+                bat "kubectl set image deployment/simple-node-demo simple-node-demo=${IMAGE_NAME}:${IMAGE_TAG} --record"
                 bat "kubectl rollout status deployment/simple-node-demo --timeout=90s"
             }
         }
 
-        // stage('Verify') {
-        //     steps {
-        //         bat "kubectl get pods -l app=ibm-cicd-demo"
-        //         // Docker Desktop's Kubernetes exposes NodePort services on localhost directly
-        //         bat "curl -s http://localhost:30080/health || true"
-        //     }
-        // }
+        stage('Verify') {
+            steps {
+                bat "kubectl get pods -l app=simple-node-demo"
+                // Docker Desktop's Kubernetes exposes NodePort services on localhost directly
+                bat "curl -s http://localhost:30080/health || true"
+            }
+        }
     }
 
     post {
