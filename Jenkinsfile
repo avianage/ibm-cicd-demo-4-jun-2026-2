@@ -14,7 +14,7 @@ pipeline {
     agent any
 
     environment {
-        DOCKERHUB_CREDENTIALS = credentials('dockerhub-creds')
+        DOCKERHUB_CREDENTIALS = credentials('docker-cicd')
         IMAGE_NAME            = "ganesh0230/simple-node-demo"
         IMAGE_TAG              = "${env.BUILD_NUMBER}"
     }
