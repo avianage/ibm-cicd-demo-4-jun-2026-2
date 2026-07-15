@@ -60,9 +60,12 @@ pipeline {
 
         stage('Verify') {
             steps {
-                bat "kubectl get pods -l app=simple-node-demo"
-                // Docker Desktop's Kubernetes exposes NodePort services on localhost directly
-                bat "curl.exe -s http://127.0.0.1:53487/"
+                bat 'kubectl get pods -l app=simple-node-demo'
+                bat '''
+                for /f %%i in ('minikube service simple-node-demo-svc --url') do set URL=%%i
+                echo %URL%
+                curl.exe %URL%
+                '''
             }
         }
     }
