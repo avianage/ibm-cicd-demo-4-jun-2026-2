@@ -46,7 +46,7 @@ pipeline {
 
         stage('Docker Push') {
             steps {
-                bat "echo \$DOCKERHUB_CREDENTIALS_PSW | docker login -u \$DOCKERHUB_CREDENTIALS_USR --password-stdin"
+                bat 'echo %DOCKERHUB_CREDENTIALS_PSW% | docker login -u %DOCKERHUB_CREDENTIALS_USR% --password-stdin'
                 bat "docker push ${IMAGE_NAME}:${IMAGE_TAG}"
                 bat "docker push ${IMAGE_NAME}:latest"
             }
@@ -54,7 +54,7 @@ pipeline {
 
         stage('Deploy to Kubernetes') {
             steps {
-                bat "kubectl set image deployment/simple-node-demo simple-node-demo=${IMAGE_NAME}:${IMAGE_TAG} --record"
+                bat "kubectl set image deployment/simple-node-demo simple-node-demo=${IMAGE_NAME}:${IMAGE_TAG}"
                 bat "kubectl rollout status deployment/simple-node-demo --timeout=90s"
             }
         }
@@ -63,7 +63,7 @@ pipeline {
             steps {
                 bat "kubectl get pods -l app=simple-node-demo"
                 // Docker Desktop's Kubernetes exposes NodePort services on localhost directly
-                bat "curl.exe -s http://localhost:30080/health || true"
+                bat "curl.exe -s http://localhost:30080/health"
             }
         }
     }
