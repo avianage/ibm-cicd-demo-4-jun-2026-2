@@ -10,19 +10,12 @@
 //   4. Jenkins agent (native install) needs docker, kubectl, and node on PATH,
 //      and its kubectl context must already point at docker-desktop
 
-// build and push to docker hub 
-
-	// docker build -t ibm-cicd-demo:1.0.0 .
-	// docker tag ibm-cicd-demo:1.0.0 vamandeshmukh/ibm-cicd-demo:1.0.0
-	// docker push vamandeshmukh/ibm-cicd-demo:1.0.0
-
-
 pipeline {
     agent any
 
     environment {
         DOCKERHUB_CREDENTIALS = credentials('dockerhub-creds')
-        IMAGE_NAME            = "vamandeshmukh/ibm-cicd-demo"
+        IMAGE_NAME            = "ganesh0230/simple-node-demo"
         IMAGE_TAG              = "${env.BUILD_NUMBER}"
     }
 
@@ -30,15 +23,15 @@ pipeline {
 
         stage('Checkout') {
             steps {
-                git branch: 'main', url: 'https://github.com/dyesmuk/ibm-cicd-demo-4-jun-2026.git'
+                git branch: 'main', url: 'https://github.com/jadhav-onkar/ibm-cicd-demo-4-jun-2026'
             }
         }
 
         stage('Install & Test') {
             steps {
                 dir('app') {
-                    bat 'npm install'
-                    bat 'npm test'
+                    sh 'npm install'
+                    sh 'npm test'
                 }
             }
         }
@@ -46,31 +39,31 @@ pipeline {
         stage('Docker Build') {
             steps {
                 dir('app') {
-                    bat "docker build -t ${IMAGE_NAME}:${IMAGE_TAG} -t ${IMAGE_NAME}:latest ."
+                    sh "docker build -t ${IMAGE_NAME}:${IMAGE_TAG} -t ${IMAGE_NAME}:latest ."
                 }
             }
         }
 
         stage('Docker Push') {
             steps {
-                bat "echo %DOCKERHUB_CREDENTIALS_PSW% | docker login -u %DOCKERHUB_CREDENTIALS_USR% --password-stdin"
-                bat "docker push ${IMAGE_NAME}:${IMAGE_TAG}"
-                bat "docker push ${IMAGE_NAME}:latest"
+                sh "echo \$DOCKERHUB_CREDENTIALS_PSW | docker login -u \$DOCKERHUB_CREDENTIALS_USR --password-stdin"
+                sh "docker push ${IMAGE_NAME}:${IMAGE_TAG}"
+                sh "docker push ${IMAGE_NAME}:latest"
             }
         }
 
         stage('Deploy to Kubernetes') {
             steps {
-                bat "kubectl set image deployment/simple-node-demo simple-node-demo=${IMAGE_NAME}:${IMAGE_TAG} --record"
-                bat "kubectl rollout status deployment/simple-node-demo --timeout=90s"
+                sh "kubectl set image deployment/simple-node-demo simple-node-demo=${IMAGE_NAME}:${IMAGE_TAG} --record"
+                sh "kubectl rollout status deployment/simple-node-demo --timeout=90s"
             }
         }
 
         stage('Verify') {
             steps {
-                bat "kubectl get pods -l app=simple-node-demo"
+                sh "kubectl get pods -l app=simple-node-demo"
                 // Docker Desktop's Kubernetes exposes NodePort services on localhost directly
-                bat "curl -s http://localhost:30080/health || true"
+                sh "curl -s http://localhost:30080/health || true"
             }
         }
     }
@@ -84,4 +77,3 @@ pipeline {
         }
     }
 }
-
