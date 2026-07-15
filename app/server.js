@@ -19,7 +19,7 @@ app.get('/', (req, res) => {
 
 app.get('/health', (req, res) => {
   console.log('done');
-  res.json({ status: 'UP' });
+  res.json({ status: 'UP', message: "hi there" });
 });
 
 // ESM equivalent of `if (require.main === module)` — only start the
