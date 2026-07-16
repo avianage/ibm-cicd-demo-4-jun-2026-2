@@ -17,7 +17,7 @@ spec:
       containers:
         - name: simple-node-demo
           # Replace with your actual DockerHub username before first apply.
-          image: ganesh0230/simple-node-demo:latest
+          image: avianage/simple-node-demo:latest
           ports:
             - containerPort: 3000
           env:
