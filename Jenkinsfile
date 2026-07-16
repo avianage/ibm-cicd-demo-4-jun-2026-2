@@ -22,7 +22,7 @@ pipeline {
 
     environment {
         DOCKERHUB_CREDENTIALS = credentials('docker-cicd')
-        IMAGE_NAME            = "ganesh0230/ibm-cicd-demo"
+        IMAGE_NAME            = "avianage/ibm-cicd-demo"
         IMAGE_TAG              = "${env.BUILD_NUMBER}"
     }
 
@@ -30,7 +30,7 @@ pipeline {
 
         stage('Checkout') {
             steps {
-                git branch: 'main', url: 'https://github.com/jadhav-onkar/ibm-cicd-demo-4-jun-2026.git'
+                git branch: 'main', url: 'https://github.com/avianage/ibm-cicd-demo-4-jun-2026-2.git'
             }
         }
 
